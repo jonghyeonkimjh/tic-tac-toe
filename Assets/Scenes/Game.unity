@@ -1906,6 +1906,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 166178490}
     m_Modifications:
+    - target: {fileID: 2597852495819676574, guid: b1fcc9fe667e98d46a4a0ed09e28736c, type: 3}
+      propertyPath: m_DrawMode
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4462759396063090413, guid: b1fcc9fe667e98d46a4a0ed09e28736c, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.8

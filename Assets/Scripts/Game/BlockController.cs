@@ -26,7 +26,7 @@ public class BlockController : MonoBehaviour
     /// </summary>
     /// <param name="markerType">마커 타입</param>
     /// <param name="row">Row</param>
-    /// <param name="col">Col</param>
+    /// <param name="column">Col</param>
     public void PlaceMarker(Block.MarkerType markerType, int row,int column)
     {
         // row, col를 index로 변환

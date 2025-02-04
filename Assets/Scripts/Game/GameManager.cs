@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
@@ -8,7 +9,7 @@ public class GameManager : Singleton<GameManager>
     public enum PlayerType { None, PlayerA, PlayerB }
     private PlayerType[,] _board;
     private int  _name;
-
+    public enum TurnType { PlayerA, PlayerB }
     private void Start()
     {
         InitGame();
@@ -30,5 +31,16 @@ public class GameManager : Singleton<GameManager>
         
         // bloacks 초기화
         blockController.InitBlocks();
+    }
+
+    private void SetTurn(TurnType turnType)
+    {
+        switch (turnType)
+        {
+            case TurnType.PlayerA:
+                break;
+            case TurnType.PlayerB:
+                break;
+        }
     }
 }
