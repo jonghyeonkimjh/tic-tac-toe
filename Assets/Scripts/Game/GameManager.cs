@@ -85,7 +85,7 @@ public class GameManager : Singleton<GameManager>
             blockController
                 .PlaceMarker(Block.MarkerType.O, row, column);
             return true;
-        } 
+        }
         else if (playerType == PlayerType.PlayerB)
         {
             _board[row, column] = playerType;

@@ -406,7 +406,7 @@ GameObject:
   - component: {fileID: 224741774}
   - component: {fileID: 224741773}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Start Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -476,9 +476,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 212694122}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: StartGame
+      - m_Target: {fileID: 563765379}
+        m_TargetAssemblyTypeName: StartPanelController, Assembly-CSharp
+        m_MethodName: OnClickStartButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -686,6 +686,7 @@ GameObject:
   - component: {fileID: 563765376}
   - component: {fileID: 563765378}
   - component: {fileID: 563765377}
+  - component: {fileID: 563765379}
   m_Layer: 5
   m_Name: Start Panel
   m_TagString: Untagged
@@ -710,7 +711,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 1800, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &563765377
@@ -751,6 +752,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 563765375}
   m_CullTransparentMesh: 1
+--- !u!114 &563765379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563765375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07d2df9f7c2e0b849b46afbeaccb1b49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &651943524
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1340,10 +1353,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Start
+  m_text: "\uC2DC\uC791"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8adb5a64b4ff5aa4d923353778d4ad81, type: 2}
+  m_sharedMaterial: {fileID: 2938177676791001453, guid: 8adb5a64b4ff5aa4d923353778d4ad81, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
