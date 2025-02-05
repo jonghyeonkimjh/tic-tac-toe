@@ -6,7 +6,7 @@ using UnityEngine;
 public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private BlockController blockController;
-    [SerializeField] private GameObject startPanel; // TODO: 테스트 코드, 삭제 예정
+    [SerializeField] private PanelManager panelManager;
     
     private enum PlayerType { None, PlayerA, PlayerB }
     private PlayerType[,] _board;
@@ -18,7 +18,6 @@ public class GameManager : Singleton<GameManager>
         Win, // 플레이어 승
         Lose, // 플레이어 패배
         Draw // 비김
-        
     }
     private void Start()
     {
@@ -35,6 +34,9 @@ public class GameManager : Singleton<GameManager>
         
         // bloacks 초기화
         blockController.InitBlocks();
+        
+        // StartPanel 표시
+        panelManager.ShowPanel(PanelManager.PanelType.StartPanel);
     }
 
     /// <summary>
@@ -42,7 +44,6 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void StartGame()
     {
-        startPanel.SetActive(false); // TODO: 테스트 코드, 삭제 예정
         SetTurn(TurnType.PlayerA);
     }
 
@@ -109,11 +110,10 @@ public class GameManager : Singleton<GameManager>
         {
             case TurnType.PlayerA:
                 Debug.Log("Player A Turn");
-                blockController.OnBlockClicked = null;
                 blockController.OnBlockClicked = (row, column) =>
                 {
-                    var result = SetNewBoardValue(PlayerType.PlayerA, row, column);
-                    if (result)
+                    var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
+                    if (isPlaced)
                     {
                         var gameResult = CheckGameResult();
                         if (gameResult == GameResult.None)
@@ -135,11 +135,10 @@ public class GameManager : Singleton<GameManager>
                 break;
             case TurnType.PlayerB:
                 Debug.Log("Player B Turn");
-                blockController.OnBlockClicked = null;
                 blockController.OnBlockClicked = (row, column) =>
                 {
-                    var result = SetNewBoardValue(PlayerType.PlayerB, row, column);
-                    if (result)
+                    var isPlaced = SetNewBoardValue(PlayerType.PlayerB, row, column);
+                    if (isPlaced)
                     {
                         var gameResult = CheckGameResult();
                         if (gameResult == GameResult.None)
