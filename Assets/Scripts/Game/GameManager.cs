@@ -7,8 +7,8 @@ public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private BlockController blockController;
     [SerializeField] private PanelManager panelManager;
-    
-    private enum PlayerType { None, PlayerA, PlayerB }
+    [SerializeField] private GameUIController gameUIController;
+    public enum PlayerType { None, PlayerA, PlayerB }
     private PlayerType[,] _board;
     private int  _name;
     private enum TurnType { PlayerA, PlayerB }
@@ -35,8 +35,11 @@ public class GameManager : Singleton<GameManager>
         // bloacks 초기화
         blockController.InitBlocks();
         
-        // StartPanel 표시
-        panelManager.ShowPanel(PanelManager.PanelType.StartPanel);
+        // Game UI 초기화
+        gameUIController.SetGameUIMode(GameUIController.GameUIMode.Init);
+        
+        // 게임 스타트
+        StartGame();
     }
 
     /// <summary>
@@ -54,6 +57,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="gameResult">Win,Lose, Draw</param>
     private void EndGame(GameResult gameResult)
     {
+        gameUIController.SetGameUIMode(GameUIController.GameUIMode.GameOver);
         // Todo: 나중에 구현!
         switch (gameResult)
         {
@@ -109,7 +113,7 @@ public class GameManager : Singleton<GameManager>
         switch (turnType)
         {
             case TurnType.PlayerA:
-                Debug.Log("Player A Turn");
+                gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
                 blockController.OnBlockClicked = (row, column) =>
                 {
                     var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
@@ -134,7 +138,7 @@ public class GameManager : Singleton<GameManager>
                 };
                 break;
             case TurnType.PlayerB:
-                Debug.Log("Player B Turn");
+                gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
                 blockController.OnBlockClicked = (row, column) =>
                 {
                     var isPlaced = SetNewBoardValue(PlayerType.PlayerB, row, column);
@@ -203,6 +207,8 @@ public class GameManager : Singleton<GameManager>
         {
             if (_board[row, 0] == playerType && _board[row, 1] == playerType && _board[row, 2] == playerType)
             {
+                (int, int)[] blocks = {(row,0), (row,1), (row,2) };
+                blockController.SetBlockColor(playerType, blocks);
                 return true;
             }
         }
@@ -212,6 +218,8 @@ public class GameManager : Singleton<GameManager>
         {
             if (_board[0, column] == playerType && _board[1, column] == playerType && _board[2, column] == playerType)
             {
+                (int, int)[] blocks = {(0,column), (1,column), (2,column) };
+                blockController.SetBlockColor(playerType, blocks);
                 return true;
             }
         }
@@ -219,11 +227,15 @@ public class GameManager : Singleton<GameManager>
         // 대각선 방향으로 마커가 일치하는지 확인
         if (_board[0, 0] == playerType && _board[1, 1] == playerType && _board[2, 2] == playerType)
         {
+            (int, int)[] blocks = {(0,0), (1,1), (2,2) };
+            blockController.SetBlockColor(playerType, blocks);
             return true;
         }
         
         if (_board[0, 2] == playerType && _board[1, 1] == playerType && _board[2, 0] == playerType)
         {
+            (int, int)[] blocks = {(0,2), (1,1), (2,0)};
+            blockController.SetBlockColor(playerType, blocks);
             return true;
         }
         
