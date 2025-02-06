@@ -82,6 +82,8 @@ public class GameManager : Singleton<GameManager>
     private void EndGame(GameResult gameResult)
     {
         _gameUIController.SetGameUIMode(GameUIController.GameUIMode.GameOver);
+        _blockController.OnBlockClicked = null;
+
         // Todo: 나중에 구현!
         switch (gameResult)
         {
@@ -106,7 +108,7 @@ public class GameManager : Singleton<GameManager>
     /// <returns>False가 반환되면 할당 할 수 없음 True는 할당이 완료됨</returns>
     private bool SetNewBoardValue(PlayerType playerType, int row, int column)
     {
-        if (_board[row, column] == PlayerType.None) return false;
+        if (_board[row, column] != PlayerType.None) return false;
 
         if (playerType == PlayerType.PlayerA)
         {
@@ -157,29 +159,35 @@ public class GameManager : Singleton<GameManager>
                 break;
             case TurnType.PlayerB:
                 _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
-                _blockController.OnBlockClicked = (row, column) =>
+                
+                // Todo: 계산된 Row, Column 값
+                // Todo: AI에게 입력 받기
+                var result = AIController.FindNextMove(_board);
+                var isPlaced = SetNewBoardValue(PlayerType.PlayerB, result.row, result.column);
+                if (isPlaced)
                 {
-                    var isPlaced = SetNewBoardValue(PlayerType.PlayerB, row, column);
-                    if (isPlaced)
+                    var gameResult = CheckGameResult();
+                    if (gameResult == GameResult.None)
                     {
-                        var gameResult = CheckGameResult();
-                        if (gameResult == GameResult.None)
-                        {
-                            SetTurn(TurnType.PlayerA);
-                        }
-                        else
-                        {
-                            EndGame(gameResult);
-                            _blockController.OnBlockClicked = null;
-                        }
+                        SetTurn(TurnType.PlayerA);
                     }
                     else
                     {
-                        // Todo: 이미 있는 곳에 마커를 두려 할때 처리
-                        Debug.Log("Player B Turn Failed");
+                        EndGame(gameResult);
+                        _blockController.OnBlockClicked = null;
                     }
-                };
-                // Todo: AI에게 입력 받기
+                }
+                else
+                {
+                    // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                    Debug.Log("Player B Turn Failed");
+                }
+                
+                // _blockController.OnBlockClicked = (row, column) =>
+                // {
+                //     
+                //     
+                // };
                 break;
         }
     }
