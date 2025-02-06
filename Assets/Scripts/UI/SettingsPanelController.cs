@@ -27,6 +27,6 @@ public class SettingsPanelController : PanelController
     /// </summary>
     public void OnClickCloseButton()
     {
-        Hide();
+        base.Hide();
     }
 }

@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class Singleton<T> : MonoBehaviour where T : Component
+public abstract class Singleton<T> : MonoBehaviour where T : Component
 {
     private static T _instance;
 
@@ -35,7 +36,19 @@ public class Singleton<T> : MonoBehaviour where T : Component
         }
         else
         {
+            Debug.Log("Instance already exists!");
             Destroy(gameObject);
         }
+        
+        // 씬 전환시 호출되는 액션 메서드 할당
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
+
+    private void OnDestroy()
+    {
+        Debug.Log("OnDestroy");
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    protected abstract void OnSceneLoaded(Scene scene, LoadSceneMode mode);
 }

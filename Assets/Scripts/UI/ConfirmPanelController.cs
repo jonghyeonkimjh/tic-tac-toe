@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ConfirmPanelController : PanelController
@@ -11,11 +12,11 @@ public class ConfirmPanelController : PanelController
     public delegate void OnConfirmButtonClickHandler();
     private OnConfirmButtonClickHandler _onConfirmButtonClick;
     
-    public void Show(string message, OnConfirmButtonClickHandler onConfirmButtonClick, OnHideHandler onHide)
+    public void Show(string message, OnConfirmButtonClickHandler onConfirmButtonClick)
     {
         messageText.text = message;
         _onConfirmButtonClick = onConfirmButtonClick;
-        base.Show(onHide);
+        base.Show();
     }
 
     /// <summary>
@@ -23,8 +24,7 @@ public class ConfirmPanelController : PanelController
     /// </summary>
     public void OnClickConfirmButton()
     {
-        _onConfirmButtonClick?.Invoke();
-        Hide();
+        Hide(()=> _onConfirmButtonClick.Invoke());
     }
     
     /// <summary>

@@ -2,12 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : Singleton<GameManager>
 {
-    [SerializeField] private BlockController blockController;
-    [SerializeField] private PanelManager panelManager;
-    [SerializeField] private GameUIController gameUIController;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject confirmPanel;
+    
+    private BlockController _blockController;
+    private GameUIController _gameUIController;
+    private Canvas _canvas;
+    
     public enum PlayerType { None, PlayerA, PlayerB }
     private PlayerType[,] _board;
     private int  _name;
@@ -19,34 +24,53 @@ public class GameManager : Singleton<GameManager>
         Lose, // 플레이어 패배
         Draw // 비김
     }
-    private void Start()
+    
+    public enum GameType
     {
-        InitGame();
+        SinglePlayer,
+        DualPlayer,
     }
 
+    public void ChangeToGameScene(GameType gameType)
+    {
+        SceneManager.LoadScene("Game");
+    }
+
+    public void ChangeToMainScene()
+    {
+        SceneManager.LoadScene("Main");
+    }
+
+    public void OpenSettingsPanel()
+    {
+        if (!_canvas) return;
+
+        var settingsPanelObject = Instantiate(settingsPanel, _canvas.transform);
+        settingsPanelObject.GetComponent<PanelController>().Show();
+    }
+
+    public void OpenConfirmPanel(string message, ConfirmPanelController.OnConfirmButtonClickHandler onConfirmButtonClickHandler)
+    {
+        if (!_canvas) return;
+
+        var confirmPanelObject = Instantiate(confirmPanel, _canvas.transform);
+        confirmPanelObject.GetComponent<ConfirmPanelController>().Show(message, onConfirmButtonClickHandler);
+    }
     /// <summary>
-    /// 게임 초기화 함수
+    /// 게임 시작
     /// </summary>
-    public void InitGame()
+    private void StartGame()
     {
         // board 초기화
         _board = new PlayerType[3, 3];
         
         // bloacks 초기화
-        blockController.InitBlocks();
+        _blockController.InitBlocks();
         
         // Game UI 초기화
-        gameUIController.SetGameUIMode(GameUIController.GameUIMode.Init);
+        _gameUIController.SetGameUIMode(GameUIController.GameUIMode.Init);
         
-        // 게임 스타트
-        StartGame();
-    }
-
-    /// <summary>
-    /// 게임 시작
-    /// </summary>
-    public void StartGame()
-    {
+        // 턴 시작
         SetTurn(TurnType.PlayerA);
     }
 
@@ -57,7 +81,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="gameResult">Win,Lose, Draw</param>
     private void EndGame(GameResult gameResult)
     {
-        gameUIController.SetGameUIMode(GameUIController.GameUIMode.GameOver);
+        _gameUIController.SetGameUIMode(GameUIController.GameUIMode.GameOver);
         // Todo: 나중에 구현!
         switch (gameResult)
         {
@@ -82,29 +106,23 @@ public class GameManager : Singleton<GameManager>
     /// <returns>False가 반환되면 할당 할 수 없음 True는 할당이 완료됨</returns>
     private bool SetNewBoardValue(PlayerType playerType, int row, int column)
     {
-        if (!CanPlaceMarker(playerType, row, column)) return false;
+        if (_board[row, column] == PlayerType.None) return false;
 
         if (playerType == PlayerType.PlayerA)
         {
             _board[row, column] = playerType;
-            blockController
+            _blockController
                 .PlaceMarker(Block.MarkerType.O, row, column);
             return true;
         }
         else if (playerType == PlayerType.PlayerB)
         {
             _board[row, column] = playerType;
-            blockController
+            _blockController
                 .PlaceMarker(Block.MarkerType.X, row, column);
             return true;
         }
         
-        return false;
-    }
-
-    private bool CanPlaceMarker(PlayerType playerType, int row, int column)
-    {
-        if (_board[row, column] == PlayerType.None) return true;
         return false;
     }
 
@@ -113,8 +131,8 @@ public class GameManager : Singleton<GameManager>
         switch (turnType)
         {
             case TurnType.PlayerA:
-                gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
-                blockController.OnBlockClicked = (row, column) =>
+                _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
+                _blockController.OnBlockClicked = (row, column) =>
                 {
                     var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
                     if (isPlaced)
@@ -127,7 +145,7 @@ public class GameManager : Singleton<GameManager>
                         else
                         {
                             EndGame(gameResult);
-                            blockController.OnBlockClicked = null;
+                            _blockController.OnBlockClicked = null;
                         }
                     }
                     else
@@ -138,8 +156,8 @@ public class GameManager : Singleton<GameManager>
                 };
                 break;
             case TurnType.PlayerB:
-                gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
-                blockController.OnBlockClicked = (row, column) =>
+                _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
+                _blockController.OnBlockClicked = (row, column) =>
                 {
                     var isPlaced = SetNewBoardValue(PlayerType.PlayerB, row, column);
                     if (isPlaced)
@@ -152,7 +170,7 @@ public class GameManager : Singleton<GameManager>
                         else
                         {
                             EndGame(gameResult);
-                            blockController.OnBlockClicked = null;
+                            _blockController.OnBlockClicked = null;
                         }
                     }
                     else
@@ -208,7 +226,7 @@ public class GameManager : Singleton<GameManager>
             if (_board[row, 0] == playerType && _board[row, 1] == playerType && _board[row, 2] == playerType)
             {
                 (int, int)[] blocks = {(row,0), (row,1), (row,2) };
-                blockController.SetBlockColor(playerType, blocks);
+                _blockController.SetBlockColor(playerType, blocks);
                 return true;
             }
         }
@@ -219,7 +237,7 @@ public class GameManager : Singleton<GameManager>
             if (_board[0, column] == playerType && _board[1, column] == playerType && _board[2, column] == playerType)
             {
                 (int, int)[] blocks = {(0,column), (1,column), (2,column) };
-                blockController.SetBlockColor(playerType, blocks);
+                _blockController.SetBlockColor(playerType, blocks);
                 return true;
             }
         }
@@ -228,17 +246,31 @@ public class GameManager : Singleton<GameManager>
         if (_board[0, 0] == playerType && _board[1, 1] == playerType && _board[2, 2] == playerType)
         {
             (int, int)[] blocks = {(0,0), (1,1), (2,2) };
-            blockController.SetBlockColor(playerType, blocks);
+            _blockController.SetBlockColor(playerType, blocks);
             return true;
         }
         
         if (_board[0, 2] == playerType && _board[1, 1] == playerType && _board[2, 0] == playerType)
         {
             (int, int)[] blocks = {(0,2), (1,1), (2,0)};
-            blockController.SetBlockColor(playerType, blocks);
+            _blockController.SetBlockColor(playerType, blocks);
             return true;
         }
         
         return false;
+    }
+
+    protected override void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "Game")
+        {
+            _blockController = GameObject.FindObjectOfType<BlockController>();
+            _gameUIController = GameObject.FindObjectOfType<GameUIController>();
+            
+            // 게임 시작
+            StartGame();
+        }
+        
+        _canvas = GameObject.FindObjectOfType<Canvas>();
     }
 }
