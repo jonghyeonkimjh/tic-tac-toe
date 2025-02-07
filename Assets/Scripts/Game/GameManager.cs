@@ -162,26 +162,34 @@ public class GameManager : Singleton<GameManager>
                 
                 // Todo: 계산된 Row, Column 값
                 // Todo: AI에게 입력 받기
-                var result = AIController.FindNextMove(_board);
-                var isPlaced = SetNewBoardValue(PlayerType.PlayerB, result.row, result.column);
-                if (isPlaced)
+                var result = MinMaxAIController.GetBestMove(_board);
+                if (result.HasValue)
                 {
-                    var gameResult = CheckGameResult();
-                    if (gameResult == GameResult.None)
+                    var isPlaced = SetNewBoardValue(PlayerType.PlayerB, result.Value.row, result.Value.column);
+                    if (isPlaced)
                     {
-                        SetTurn(TurnType.PlayerA);
+                        var gameResult = CheckGameResult();
+                        if (gameResult == GameResult.None)
+                        {
+                            SetTurn(TurnType.PlayerA);
+                        }
+                        else
+                        {
+                            EndGame(gameResult);
+                            _blockController.OnBlockClicked = null;
+                        }
                     }
                     else
                     {
-                        EndGame(gameResult);
-                        _blockController.OnBlockClicked = null;
+                        // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                        Debug.Log("Player B Turn Failed");
                     }
                 }
                 else
                 {
-                    // Todo: 이미 있는 곳에 마커를 두려 할때 처리
-                    Debug.Log("Player B Turn Failed");
+                    EndGame(GameResult.Win);
                 }
+
                 
                 // _blockController.OnBlockClicked = (row, column) =>
                 // {
@@ -198,9 +206,9 @@ public class GameManager : Singleton<GameManager>
     /// <returns>플레이어 기준 게임 결과</returns>
     private GameResult CheckGameResult()
     {
-        if (CheckGameWin(PlayerType.PlayerA)) return GameResult.Win;
-        if (CheckGameWin(PlayerType.PlayerB)) return GameResult.Lose;
-        if (IsAllBlockPlaced()) return GameResult.Draw;
+        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerA,_board)) return GameResult.Win;
+        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerB,_board)) return GameResult.Lose;
+        if (MinMaxAIController.IsAllBlockPlaced(_board)) return GameResult.Draw;
         
         return GameResult.None;
     }
@@ -224,7 +232,6 @@ public class GameManager : Singleton<GameManager>
         return true;
     }
 
-    //게임의 승패를 판단하는 함수
     private bool CheckGameWin(PlayerType playerType)
     {
         
