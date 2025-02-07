@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public static class MinMaxAIController
 {
     public static (int row, int column)? GetBestMove(GameManager.PlayerType[,] board)
     {
-        float bestScore = -1000.0f; // 나에게 이득이 되는 경우의 수 가중치 중 가장 큰 값.
+        float bestScore = float.MinValue; // 나에게 이득이 되는 경우의 수 가중치 중 가장 큰 값.
         (int row, int column)? bestMove = null;
 
         for (var row = 0; row < board.GetLength(0); row++)
@@ -29,14 +30,15 @@ public static class MinMaxAIController
         
         return bestMove;
     }
-    private static float DoMinMax(GameManager.PlayerType[,] board, int depth, bool isAITurn)
+    private static float DoMinMax(GameManager.PlayerType[,] board, int depth, bool isMaximizing)
     {
         if (CheckGameWin(GameManager.PlayerType.PlayerA, board)) return -10f + depth; // A Win
-        if (CheckGameWin(GameManager.PlayerType.PlayerB, board)) return 10f  + depth; // B Win
+        if (CheckGameWin(GameManager.PlayerType.PlayerB, board)) return 10f  - depth; // B Win
         if (IsAllBlockPlaced(board)) return 0.0f; // draw
 
-        if (isAITurn)
+        if (isMaximizing)
         {
+            var bestScore = float.MinValue;
             for (var row = 0; row < board.GetLength(0); row++)
             {
                 for (var column = 0; column < board.GetLength(1); column++)
@@ -46,12 +48,15 @@ public static class MinMaxAIController
                         board[row, column] = GameManager.PlayerType.PlayerB;
                         var score = DoMinMax(board, depth + 1, false);
                         board[row, column] = GameManager.PlayerType.None;
+                        bestScore = Math.Max(bestScore, score);
                     };
                 }
             }
+            return bestScore;
         }
         else
         {
+            var bestScore = float.MaxValue;
             for (var row = 0; row < board.GetLength(0); row++)
             {
                 for (var column = 0; column < board.GetLength(1); column++)
@@ -61,12 +66,12 @@ public static class MinMaxAIController
                         board[row, column] = GameManager.PlayerType.PlayerA;
                         var score = DoMinMax(board, depth + 1, true);
                         board[row, column] = GameManager.PlayerType.None;
+                        bestScore = Math.Min(bestScore, score);
                     };
                 }
             }
+            return bestScore;
         }
-        
-        return 0.0f;
     }
     public static bool IsAllBlockPlaced(GameManager.PlayerType[,] board)
     {
