@@ -58,4 +58,14 @@ public class GameUIController : MonoBehaviour
     {
         GameManager.Instance.OpenConfirmPanel("게임을 종료하시겠습니까?", () => GameManager.Instance.ChangeToMainScene());
     }
+
+    public void OnClickSettingsButton()
+    {
+        GameManager.Instance.OpenSettingsPanel();
+    }
+
+    public void OnClickBackButton()
+    {
+        GameManager.Instance.OpenConfirmPanel("게임을 종료하시겠습니까?", () => GameManager.Instance.ChangeToMainScene());
+    }
 }

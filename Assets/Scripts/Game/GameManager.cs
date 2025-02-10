@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,8 +13,9 @@ public class GameManager : Singleton<GameManager>
     private Canvas _canvas;
     
     public enum PlayerType { None, PlayerA, PlayerB }
+    private GameType _gameType;
+    
     private PlayerType[,] _board;
-    private int  _name;
     private enum TurnType { PlayerA, PlayerB }
     private enum GameResult 
     { 
@@ -33,6 +33,7 @@ public class GameManager : Singleton<GameManager>
 
     public void ChangeToGameScene(GameType gameType)
     {
+        _gameType = gameType;
         SceneManager.LoadScene("Game");
     }
 
@@ -159,43 +160,61 @@ public class GameManager : Singleton<GameManager>
                 break;
             case TurnType.PlayerB:
                 _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
-                
-                // Todo: 계산된 Row, Column 값
-                // Todo: AI에게 입력 받기
-                var result = MinMaxAIController.GetBestMove(_board);
-                if (result.HasValue)
+                if (_gameType == GameType.SinglePlayer)
                 {
-                    var isPlaced = SetNewBoardValue(PlayerType.PlayerB, result.Value.row, result.Value.column);
-                    if (isPlaced)
+                    var result = MinMaxAIController.GetBestMove(_board);
+                    if (result.HasValue)
                     {
-                        var gameResult = CheckGameResult();
-                        if (gameResult == GameResult.None)
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerB, result.Value.row, result.Value.column);
+                        if (isPlaced)
                         {
-                            SetTurn(TurnType.PlayerA);
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                SetTurn(TurnType.PlayerA);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                            }
                         }
                         else
                         {
-                            EndGame(gameResult);
-                            _blockController.OnBlockClicked = null;
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player B Turn Failed");
                         }
                     }
                     else
                     {
-                        // Todo: 이미 있는 곳에 마커를 두려 할때 처리
-                        Debug.Log("Player B Turn Failed");
+                        EndGame(GameResult.Win);
                     }
                 }
-                else
+                else if (_gameType == GameType.DualPlayer)
                 {
-                    EndGame(GameResult.Win);
+                    _blockController.OnBlockClicked = (row, column) =>
+                    {
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerB, row, column);
+                        if (isPlaced)
+                        {
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                SetTurn(TurnType.PlayerA);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                            }
+                        }
+                        else
+                        {
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player A Turn Failed");
+                        }
+                    }; 
                 }
-
-                
-                // _blockController.OnBlockClicked = (row, column) =>
-                // {
-                //     
-                //     
-                // };
                 break;
         }
     }
