@@ -1,5 +1,6 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class Block : MonoBehaviour
@@ -68,6 +69,8 @@ public class Block : MonoBehaviour
     
     private void OnMouseUpAsButton()
     {
+        // UI가 overlay 되어있는 상태에서는 이벤트를 안받도록
+        if (EventSystem.current.IsPointerOverGameObject()) return;
         // 이 블럭의 범위 안에서만 터치 이벤트를 감지하는 버튼 (버튼을 클릭시 취소한다거나 그런걸 할 수 있게함)
         _onBlockClicked?.Invoke(_blockIndex);
     }
