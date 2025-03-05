@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -17,24 +18,27 @@ public class SignupPanelController : MonoBehaviour
     [SerializeField] private TMP_InputField passwordInputField;
     [SerializeField] private TMP_InputField confirmPasswordInputField;
     
-    private const string serverURL = "http://localhost:3000";
-    
     public void OnClickConfirmButton()
     {
         var username = usernameInputField.text;
         var nickname = nicknameInputField.text;
         var password = passwordInputField.text;
-        var comfirmPassword = confirmPasswordInputField.text;
+        var confirmPassword = confirmPasswordInputField.text;
 
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(nickname) || string.IsNullOrEmpty(password) ||
-            string.IsNullOrEmpty(comfirmPassword))
+            string.IsNullOrEmpty(confirmPassword))
         {
             //TODO: 입력값이 비어있음을 알리는 팝업창 표시, early return
+            GameManager.Instance.OpenConfirmPanel("입력 내용이 누락되었습니다.",
+                    () =>
+                    {
+                        
+                    });
             return;
         }
 
 
-        if (password.Equals(comfirmPassword))
+        if (password.Equals(confirmPassword))
         {
             var signupData = new SignupData();
             signupData.username = username;
@@ -42,11 +46,23 @@ public class SignupPanelController : MonoBehaviour
             signupData.password = password;
             
             // TODO: 서버로 SignupData 전달하면서 회원가입 진행
-            StartCoroutine(Signup(signupData));
+            StartCoroutine(NetworkManager.Instance.Signup(signupData,
+                    () =>
+                    {
+                        Destroy(gameObject);
+                    },
+                    () =>
+                    {
+                        usernameInputField.text = "";
+                        nicknameInputField.text = "";
+                        passwordInputField.text = "";
+                        confirmPasswordInputField.text = "";
+                    }));
+            
         }
     }
 
-    IEnumerator Signup(SignupData signupData)
+    private IEnumerator Signup(SignupData signupData)
     {
         string jsonString = JsonUtility.ToJson(signupData); 
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonString);
@@ -54,7 +70,7 @@ public class SignupPanelController : MonoBehaviour
         // UnityWebRequest www = new UnityWebRequest(serverURL + "/users/signup", UnityWebRequest.kHttpVerbPOST);
         // www.Dispose();
 
-        using (UnityWebRequest www = new UnityWebRequest(serverURL + "/users/signup", UnityWebRequest.kHttpVerbPOST))
+        using (UnityWebRequest www = new UnityWebRequest(Constants.ServerURL + "/users/signup", UnityWebRequest.kHttpVerbPOST))
         {
             www.uploadHandler = new UploadHandlerRaw(bodyRaw);
             www.downloadHandler = new DownloadHandlerBuffer();

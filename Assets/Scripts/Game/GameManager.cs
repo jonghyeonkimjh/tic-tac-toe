@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,6 +8,8 @@ public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject confirmPanel;
+    [SerializeField] private GameObject signinPanel;
+    [SerializeField] private GameObject signupPanel;
     
     private BlockController _blockController;
     private GameUIController _gameUIController;
@@ -29,6 +32,11 @@ public class GameManager : Singleton<GameManager>
     {
         SinglePlayer,
         DualPlayer,
+    }
+
+    private void Start()
+    {
+        NetworkManager.Instance.GetScore();
     }
 
     public void ChangeToGameScene(GameType gameType)
@@ -56,6 +64,22 @@ public class GameManager : Singleton<GameManager>
 
         var confirmPanelObject = Instantiate(confirmPanel, _canvas.transform);
         confirmPanelObject.GetComponent<ConfirmPanelController>().Show(message, onConfirmButtonClickHandler);
+    }
+
+    public void OpenSigninPanel()
+    {
+        if (!_canvas) return;
+
+        var signinPanelObject = Instantiate(signinPanel, _canvas.transform);
+        // signinPanelObject.GetComponent<SigninPanelController>().Show(message, onConfirmButtonClickHandler);
+    }
+
+    public void OpenSignupPanel()
+    {
+        if (!_canvas) return;
+
+        var signupPanelObject = Instantiate(signupPanel, _canvas.transform);
+        // sigininPanelObject.GetComponent<SignupPanelController>().Show(message, onConfirmButtonClickHandler);
     }
     /// <summary>
     /// 게임 시작
