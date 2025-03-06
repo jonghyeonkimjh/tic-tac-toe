@@ -131,7 +131,7 @@ namespace Common
 
         public void GetScore()
         {
-            StartCoroutine(NetworkManager.Instance.GetScore(
+            StartCoroutine(GetScore(
                     (userInfo) =>
                     {
                         Debug.Log(userInfo);
@@ -142,6 +142,7 @@ namespace Common
                         GameManager.Instance.OpenSigninPanel();
                     }));
         }
+
         
         public IEnumerator GetScore(Action<ScoreResult> success, Action failure)
         {
@@ -172,6 +173,150 @@ namespace Common
                     var result = www.downloadHandler.text;
                     var userScore = JsonUtility.FromJson<ScoreResult>(result);
                     Debug.Log("Result:"  + userScore.score);
+                    
+                    success?.Invoke(userScore);
+                }
+            }
+            yield return null;
+        }
+
+        public IEnumerator GetRanking(Action<RankResult> success, Action failure)
+        {
+            using (UnityWebRequest www = new UnityWebRequest(Constants.ServerURL + "/users/ranking", UnityWebRequest.kHttpVerbGET))
+            {
+                www.downloadHandler = new DownloadHandlerBuffer();
+                
+                string sid = PlayerPrefs.GetString("sid", "");
+                if (!string.IsNullOrEmpty(sid))
+                {
+                    www.SetRequestHeader("Cookie", sid);
+                }
+                
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.ConnectionError ||
+                    www.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    if (www.responseCode == 403)
+                    {
+                        Debug.Log("로그인이 필요합니다.");
+                    }
+                    
+                    failure?.Invoke();
+                }
+                else
+                {
+                    var result = www.downloadHandler.text;
+                    var userScore = JsonUtility.FromJson<RankResult>(result);
+                    Debug.Log("Result:"  + userScore.ranking[0].score);
+                    success?.Invoke(userScore);
+                }
+            }
+            yield return null;
+        }
+
+        public void UpdateScore(NewScoreData scoreData)
+        {
+            StartCoroutine(UpdateScore(
+                    scoreData,
+                    (userInfo) =>
+                    {
+                        Debug.Log(userInfo);
+                    },
+                    () =>
+                    {
+                        // 로그인 화면 띄우기
+                        Debug.Log("GetRanking fail");
+                    }));
+        }
+        public IEnumerator UpdateScore(NewScoreData scoreData, Action<NewScoreData> success, Action failure)
+        {
+            string jsonString = JsonUtility.ToJson(scoreData);
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonString);
+            
+            using (UnityWebRequest www = new UnityWebRequest(Constants.ServerURL + "/users/score", UnityWebRequest.kHttpVerbPOST))
+            {
+                www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                www.downloadHandler = new DownloadHandlerBuffer();
+                www.SetRequestHeader("Content-Type", "application/json");
+                string sid = PlayerPrefs.GetString("sid", "");
+                if (!string.IsNullOrEmpty(sid))
+                {
+                    www.SetRequestHeader("Cookie", sid);
+                }
+                
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.ConnectionError ||
+                    www.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    if (www.responseCode == 403)
+                    {
+                        Debug.Log("로그인이 필요합니다.");
+                    }
+                    
+                    failure?.Invoke();
+                }
+                else
+                {
+                    var result = www.downloadHandler.text;
+                    var userScore = JsonUtility.FromJson<NewScoreData>(result);
+                    Debug.Log("Result:"  + userScore.score);
+                    success?.Invoke(userScore);
+                }
+            }
+            yield return null;
+        }
+
+
+        public void GetUser()
+        {
+            StartCoroutine(
+                    GetUser(
+                            (userInfo) =>
+                            {
+                                Debug.Log(userInfo);
+                                PlayerPrefs.SetString("currentUserId", userInfo.id);
+                                PlayerPrefs.SetString("currentUsername", userInfo.username);
+
+                            },
+                            () =>
+                            {
+                                // 로그인 화면 띄우기
+                                Debug.Log("GetRanking fail");
+                            }
+                            )
+                    );
+        }
+        public IEnumerator GetUser(Action<UserInfo> success, Action failure)
+        {
+            using (UnityWebRequest www = new UnityWebRequest(Constants.ServerURL + "/users/user", UnityWebRequest.kHttpVerbGET))
+            {
+                www.downloadHandler = new DownloadHandlerBuffer();
+                
+                string sid = PlayerPrefs.GetString("sid", "");
+                if (!string.IsNullOrEmpty(sid))
+                {
+                    www.SetRequestHeader("Cookie", sid);
+                }
+                
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.ConnectionError ||
+                    www.result == UnityWebRequest.Result.ProtocolError)
+                {
+                    if (www.responseCode == 403)
+                    {
+                        Debug.Log("로그인이 필요합니다.");
+                    }
+                    
+                    failure?.Invoke();
+                }
+                else
+                {
+                    var result = www.downloadHandler.text;
+                    var userScore = JsonUtility.FromJson<UserInfo>(result);
+                    Debug.Log("Result:"  + userScore.nickname);
                     
                     success?.Invoke(userScore);
                 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -10,6 +11,7 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private GameObject confirmPanel;
     [SerializeField] private GameObject signinPanel;
     [SerializeField] private GameObject signupPanel;
+    [SerializeField] private GameObject leaderboardPanel;
     
     private BlockController _blockController;
     private GameUIController _gameUIController;
@@ -36,7 +38,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Start()
     {
-        NetworkManager.Instance.GetScore();
+        NetworkManager.Instance.GetUser();
     }
 
     public void ChangeToGameScene(GameType gameType)
@@ -79,6 +81,14 @@ public class GameManager : Singleton<GameManager>
         if (!_canvas) return;
 
         var signupPanelObject = Instantiate(signupPanel, _canvas.transform);
+        // sigininPanelObject.GetComponent<SignupPanelController>().Show(message, onConfirmButtonClickHandler);
+    }
+    
+    public void OpenLeaderboardPanel()
+    {
+        if (!_canvas) return;
+
+        var signupPanelObject = Instantiate(leaderboardPanel, _canvas.transform);
         // sigininPanelObject.GetComponent<SignupPanelController>().Show(message, onConfirmButtonClickHandler);
     }
     /// <summary>
@@ -249,9 +259,19 @@ public class GameManager : Singleton<GameManager>
     /// <returns>플레이어 기준 게임 결과</returns>
     private GameResult CheckGameResult()
     {
-        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerA,_board)) return GameResult.Win;
-        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerB,_board)) return GameResult.Lose;
-        if (MinMaxAIController.IsAllBlockPlaced(_board)) return GameResult.Draw;
+        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerA, _board))
+        {
+            NetworkManager.Instance.UpdateScore(new NewScoreData() { score = 10 });
+            return GameResult.Win;
+        };
+        if (MinMaxAIController.CheckGameWin(PlayerType.PlayerB, _board))
+        {
+            return GameResult.Lose;
+        }
+        if (MinMaxAIController.IsAllBlockPlaced(_board))
+        {
+            return GameResult.Draw;
+        }
         
         return GameResult.None;
     }

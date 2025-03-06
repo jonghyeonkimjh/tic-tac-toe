@@ -11,6 +11,7 @@ public struct SignupData
     public string nickname;
     public string password;
 }
+
 public class SignupPanelController : MonoBehaviour
 {
     [SerializeField] private TMP_InputField usernameInputField;

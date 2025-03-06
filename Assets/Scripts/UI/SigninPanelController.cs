@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Common;
@@ -16,11 +17,28 @@ public struct SigninResult
     public int result;
 }
 
+public struct UserInfo
+{
+    public string id;
+    public string username;
+    public string nickname;
+}
+
+[Serializable]
 public struct ScoreResult
 {
     public string id;
     public string username;
     public string nickname;
+    public int score;
+}
+
+public struct RankResult {
+    public ScoreResult[] ranking;
+}
+
+public struct NewScoreData
+{
     public int score;
 }
 

@@ -24,15 +24,6 @@ public class MainPanelController : MonoBehaviour
 
    public void OnClickScoreButton()
    {
-      StartCoroutine(NetworkManager.Instance.GetScore(
-            (userInfo) =>
-            {
-               Debug.Log(userInfo);
-            },
-            () =>
-            {
-               // 로그인 화면 띄우기
-               GameManager.Instance.OpenSigninPanel();
-            }));
+      GameManager.Instance.OpenLeaderboardPanel();
    }
 }
