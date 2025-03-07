@@ -22,6 +22,7 @@ public class GameUIController : MonoBehaviour
 
     public void SetGameUIMode(GameUIMode mode)
     {
+        Debug.Log("SetGameUIMode");
         switch (mode)
         {
             case GameUIMode.Init:

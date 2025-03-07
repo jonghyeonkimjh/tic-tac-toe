@@ -14,7 +14,6 @@ public class BlockController : MonoBehaviour
             {
                 var clickedRow = blockIndex / 3;
                 var clickedColumn = blockIndex % 3;
-                
                 OnBlockClicked?.Invoke(clickedRow, clickedColumn);
             });
         }

@@ -35,6 +35,9 @@ public class GameManager : Singleton<GameManager>
         SinglePlayer,
         DualPlayer,
     }
+    
+    private MultiplayManager _multiplayManager;
+    private string _roomId;
 
     private void Start()
     {
@@ -91,6 +94,107 @@ public class GameManager : Singleton<GameManager>
         var signupPanelObject = Instantiate(leaderboardPanel, _canvas.transform);
         // sigininPanelObject.GetComponent<SignupPanelController>().Show(message, onConfirmButtonClickHandler);
     }
+    #region MultipleGameLogic
+
+    private void OnConnect()
+    {
+        _multiplayManager = new MultiplayManager(
+                (state, id) =>
+                {
+                    switch (state)
+                    {
+
+                        case Constants.MultplayManagerState.CreateRoom:
+                            Debug.Log("##Create Room");
+                            _roomId = id;
+                            break;
+                        case Constants.MultplayManagerState.JoinRoom:
+                            Debug.Log("##Join Room");
+                            _roomId = id;
+                            break;
+                        case Constants.MultplayManagerState.StartGame:
+                            Debug.Log("##Start Game");
+                            UnityThread.executeInUpdate(
+                                    () =>
+                                    {
+                                        SetTurn(TurnType.PlayerA);
+                                    });
+                            break;
+                        case Constants.MultplayManagerState.EndGame:
+                            Debug.Log("##End Game");
+                            break;
+                    }
+                });
+        _multiplayManager.OnReceiveMessage = OnReceiveMessage;
+    }
+    
+    private void OnReceiveMessage(MessageData messageData)
+    {
+        UnityThread.executeInUpdate(
+                () =>
+                {
+                    Debug.Log(messageData.playerType == PlayerType.PlayerA);
+                    Debug.Log(messageData.row);
+                    Debug.Log(messageData.column);
+                    if (messageData.playerType == PlayerType.PlayerA)
+                    {
+                        _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerA, messageData.row, messageData.column);
+                        if (isPlaced)
+                        {
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerA, messageData.row, messageData.column);
+                                SetTurn(TurnType.PlayerB);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                            }
+                        }
+                        else
+                        {
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player A Turn Failed");
+                        }
+                    }
+                    else
+                    {
+                        _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerB, messageData.row, messageData.column);
+                        if (isPlaced)
+                        {
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerB, messageData.row, messageData.column);
+                                SetTurn(TurnType.PlayerA);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                            }
+                        }
+                        else
+                        {
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player A Turn Failed");
+                        }
+                    }
+                });
+    }
+    private void OnDestroy()
+    {
+        if (_multiplayManager.OnReceiveMessage != null)
+        {
+            _multiplayManager.OnReceiveMessage = null;
+            _multiplayManager.Disconnect();
+        }
+    }
+    #endregion
     /// <summary>
     /// 게임 시작
     /// </summary>
@@ -99,14 +203,24 @@ public class GameManager : Singleton<GameManager>
         // board 초기화
         _board = new PlayerType[3, 3];
         
-        // bloacks 초기화
+        // blocks 초기화
         _blockController.InitBlocks();
         
         // Game UI 초기화
         _gameUIController.SetGameUIMode(GameUIController.GameUIMode.Init);
-        
-        // 턴 시작
-        SetTurn(TurnType.PlayerA);
+
+        if (_gameType == GameType.SinglePlayer)
+        {
+            // 턴 시작
+            Debug.Log("Start TicTecToe Single Game");
+            SetTurn(TurnType.PlayerA);
+        }
+        else
+        {
+            Debug.Log("Start TicTecToe Multi Game");
+            // SetTurn(TurnType.PlayerB);
+            OnConnect();
+        }
     }
 
     /// <summary>
@@ -165,32 +279,66 @@ public class GameManager : Singleton<GameManager>
 
     private void SetTurn(TurnType turnType)
     {
+        
         switch (turnType)
         {
             case TurnType.PlayerA:
-                _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
-                _blockController.OnBlockClicked = (row, column) =>
+                if (_gameType == GameType.SinglePlayer)
                 {
-                    var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
-                    if (isPlaced)
+                    _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
+                    _blockController.OnBlockClicked = (row, column) =>
                     {
-                        var gameResult = CheckGameResult();
-                        if (gameResult == GameResult.None)
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
+                        if (isPlaced)
                         {
-                            SetTurn(TurnType.PlayerB);
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                SetTurn(TurnType.PlayerB);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                            }
                         }
                         else
                         {
-                            EndGame(gameResult);
-                            _blockController.OnBlockClicked = null;
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player A Turn Failed");
                         }
-                    }
-                    else
+                    };
+                }
+                else if (_gameType == GameType.DualPlayer)
+                {
+                    Debug.Log(turnType);
+                    Debug.Log(_gameType);
+                    _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnA);
+                    _blockController.OnBlockClicked = (row, column) =>
                     {
-                        // Todo: 이미 있는 곳에 마커를 두려 할때 처리
-                        Debug.Log("Player A Turn Failed");
-                    }
-                };
+                        var isPlaced = SetNewBoardValue(PlayerType.PlayerA, row, column);
+                        if (isPlaced)
+                        {
+                            var gameResult = CheckGameResult();
+                            if (gameResult == GameResult.None)
+                            {
+                                SetTurn(TurnType.PlayerB);
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerA, row, column);
+                            }
+                            else
+                            {
+                                EndGame(gameResult);
+                                _blockController.OnBlockClicked = null;
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerA, row, column);
+                            }
+                        }
+                        else
+                        {
+                            // Todo: 이미 있는 곳에 마커를 두려 할때 처리
+                            Debug.Log("Player A Turn Failed");
+                        }
+                    };
+                }
                 break;
             case TurnType.PlayerB:
                 _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
@@ -235,11 +383,13 @@ public class GameManager : Singleton<GameManager>
                             if (gameResult == GameResult.None)
                             {
                                 SetTurn(TurnType.PlayerA);
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerB, row, column);
                             }
                             else
                             {
                                 EndGame(gameResult);
                                 _blockController.OnBlockClicked = null;
+                                _multiplayManager.SendMessage(_roomId, PlayerType.PlayerB, row, column);
                             }
                         }
                         else
@@ -345,10 +495,13 @@ public class GameManager : Singleton<GameManager>
             _blockController = GameObject.FindObjectOfType<BlockController>();
             _gameUIController = GameObject.FindObjectOfType<GameUIController>();
             
+            Debug.Log("OnSceneLoaded");
             // 게임 시작
             StartGame();
         }
         
         _canvas = GameObject.FindObjectOfType<Canvas>();
     }
+
+    
 }
