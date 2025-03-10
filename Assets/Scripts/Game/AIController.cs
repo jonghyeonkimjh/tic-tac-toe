@@ -3,54 +3,54 @@ using UnityEngine;
 
 public static class AIController
 {
-    public static (int row, int column) FindNextMove(GameManager.PlayerType[,] board)
+    public static (int row, int column) FindNextMove(Constants.PlayerType[,] board)
     {
         var canPlaces = new List<(int row, int column)>();
         for (int rowIndex = 0; rowIndex < board.GetLength(0); rowIndex++)
         {
             for (int columnIndex = 0; columnIndex < board.GetLength(1); columnIndex++)
             {
-                if (board[rowIndex, columnIndex] == GameManager.PlayerType.None)
+                if (board[rowIndex, columnIndex] == Constants.PlayerType.None)
                 {
                     // 내가 이기거나 상대가 두면 이기는 위치에 수를 두기
-                    board[rowIndex, columnIndex] = GameManager.PlayerType.PlayerB;
-                    if (IsRowWin(board, rowIndex, GameManager.PlayerType.PlayerB))
+                    board[rowIndex, columnIndex] = Constants.PlayerType.PlayerB;
+                    if (IsRowWin(board, rowIndex, Constants.PlayerType.PlayerB))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
                     
-                    if (IsColumnWin(board, columnIndex, GameManager.PlayerType.PlayerB))
+                    if (IsColumnWin(board, columnIndex, Constants.PlayerType.PlayerB))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
 
-                    if (IsDiagonalWin(board, GameManager.PlayerType.PlayerB))
+                    if (IsDiagonalWin(board, Constants.PlayerType.PlayerB))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
                     
-                    board[rowIndex, columnIndex] = GameManager.PlayerType.PlayerA;
-                    if (IsRowWin(board, rowIndex, GameManager.PlayerType.PlayerA))
+                    board[rowIndex, columnIndex] = Constants.PlayerType.PlayerA;
+                    if (IsRowWin(board, rowIndex, Constants.PlayerType.PlayerA))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
                     
-                    if (IsColumnWin(board, columnIndex, GameManager.PlayerType.PlayerA))
+                    if (IsColumnWin(board, columnIndex, Constants.PlayerType.PlayerA))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
 
-                    if (IsDiagonalWin(board, GameManager.PlayerType.PlayerA))
+                    if (IsDiagonalWin(board, Constants.PlayerType.PlayerA))
                     {
-                        board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                        board[rowIndex, columnIndex] = Constants.PlayerType.None;
                         return (rowIndex, columnIndex);
                     }
-                    board[rowIndex, columnIndex] = GameManager.PlayerType.None;
+                    board[rowIndex, columnIndex] = Constants.PlayerType.None;
                     
                     
                     canPlaces.Add((rowIndex, columnIndex));
@@ -71,7 +71,7 @@ public static class AIController
     /// <param name="row"></param>
     /// <param name="playerType"></param>
     /// <returns></returns>
-    private static bool IsRowWin(GameManager.PlayerType[,] board, int row, GameManager.PlayerType playerType)
+    private static bool IsRowWin(Constants.PlayerType[,] board, int row, Constants.PlayerType playerType)
     {
         if (board[row, 0] == playerType && board[row, 1] == playerType && board[row, 2] == playerType)
         {
@@ -88,7 +88,7 @@ public static class AIController
     /// <param name="column"></param>
     /// <param name="playerType"></param>
     /// <returns></returns>
-    private static bool IsColumnWin(GameManager.PlayerType[,] board, int column, GameManager.PlayerType playerType)
+    private static bool IsColumnWin(Constants.PlayerType[,] board, int column, Constants.PlayerType playerType)
     {
         if (board[0, column] == playerType && board[1, column] == playerType && board[2, column] == playerType)
         {
@@ -105,7 +105,7 @@ public static class AIController
     /// <param name="board"></param>
     /// <param name="playerType"></param>
     /// <returns></returns>
-    private static bool IsDiagonalWin(GameManager.PlayerType[,] board, GameManager.PlayerType playerType)
+    private static bool IsDiagonalWin(Constants.PlayerType[,] board, Constants.PlayerType playerType)
     {
         if (board[0, 0] == playerType && board[1, 1] == playerType && board[2, 2] == playerType)
         {

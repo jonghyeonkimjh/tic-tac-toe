@@ -16,6 +16,12 @@ namespace Common
         [JsonProperty("userId")]
         public string userId { get; set; }
     }
+
+    public class MoveData
+    {
+        [JsonProperty("position")] 
+        public int position { get; set; } //row and column (row * column ) + column;
+    }
     
     public class MessageData
     {
@@ -24,7 +30,7 @@ namespace Common
         [JsonProperty("message")]
         public string message { get; set; }
         [JsonProperty("playerType")]
-        public GameManager.PlayerType playerType { get; set; }
+        public Constants.PlayerType playerType { get; set; }
         [JsonProperty("row")]
         public int row { get; set; }
         [JsonProperty("column")]
@@ -36,6 +42,7 @@ namespace Common
         private SocketIOUnity _socket;
         private event Action<Constants.MultplayManagerState, string> _onMultiplayStateChanged;
         public Action<MessageData> OnReceiveMessage;
+        public Action<MoveData> OnOpponentMove;
         public MultiplayManager(Action<Constants.MultplayManagerState, string> onMultiplayStateChanged)
         {
             _onMultiplayStateChanged =  onMultiplayStateChanged;
@@ -47,11 +54,25 @@ namespace Common
             
             _socket.On("createRoom", CreateRoom);
             _socket.On("joinRoom", JoinRoom);
+            _socket.On("exitRoom", EndGame);
             _socket.On("startGame", StartGame);
-            _socket.On("gameEnded", GameEnded);
+            _socket.On("endGame", EndGame);
+            _socket.On("doOpponent", DoOpponent);
             _socket.On("receiveMessage", ReceiveMessage);
             
             _socket.Connect();
+        }
+
+        // 서버로  부터 상대방의 마커 정보를 받기 위한 메서드
+        private void DoOpponent(SocketIOResponse response)
+        {
+            var data = response.GetValue<MoveData>();
+            OnOpponentMove?.Invoke(data);
+        }
+
+        public void SendPlayerMove(string roomId, int position)
+        {
+            _socket.Emit("doPlayer", new{ roomId, position});
         }
 
         private void CreateRoom(SocketIOResponse response)
@@ -65,17 +86,23 @@ namespace Common
             var data = response.GetValue<RoomData>();
             _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.JoinRoom, data.roomId);
         }
+
+        
+
+        private void ExitRoom(SocketIOResponse response)
+        {
+            _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.ExitRoom, null);
+        }
         
         private void StartGame(SocketIOResponse response)
         {
-            var data = response.GetValue<UserData>();
-            _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.StartGame, data.userId);
+            var data = response.GetValue<RoomData>();
+            _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.StartGame, data.roomId);
         }
         
-        private void GameEnded(SocketIOResponse response) 
+        private void EndGame(SocketIOResponse response) 
         {
-            var data = response.GetValue<UserData>();
-            _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.EndGame, data.userId);
+            _onMultiplayStateChanged?.Invoke(Constants.MultplayManagerState.EndGame, null);
         }
         private void ReceiveMessage(SocketIOResponse response) 
         {
@@ -89,37 +116,29 @@ namespace Common
             _socket.Emit("sendMessage", new {roomId, nickname, message});
         }
         
-        public void SendMessage(string roomId, GameManager.PlayerType playerType, int row, int column)
+        public void SendMessage(string roomId, Constants.PlayerType playerType, int row, int column)
         {
             _socket.Emit("sendMessage", new {roomId, playerType, row, column});
         }
         
+        public void LeaveRoom(string roomId)
+        {
+            _socket.Emit("leaveRoom", new { roomId });
+        }
+
         /// <summary>
         /// 소켓 연결을 종료하고, 모든 이벤트 핸들러를 해제
         /// </summary>
-        public void Disconnect()
-        {
-            if (_socket != null)
-            {
-                Debug.Log("MultiplayManager: Disconnecting from server...");
-
-                // 이벤트 핸들러 해제
-                _socket.Off("createRoom");
-                _socket.Off("joinRoom");
-                _socket.Off("startGame");
-                _socket.Off("gameEnded");
-                _socket.Off("receiveMessage");
-
-                // 소켓 연결 해제
-                _socket.Disconnect();
-                _socket = null;
-            }
-        }
-
         public void Dispose()
         {
             if (_socket != null)
             {
+                // _socket.Off("createRoom");
+                // _socket.Off("joinRoom");
+                // _socket.Off("startGame");
+                // _socket.Off("gameEnded");
+                // _socket.Off("receiveMessage");
+
                 _socket.Disconnect();
                 _socket.Dispose();
                 _socket = null;
